@@ -3,3 +3,5 @@ pymessenger>=0.0.7.0
 gunicorn>=19.6.0
 pypdb
 onedep_api
+matplotlib
+nltk

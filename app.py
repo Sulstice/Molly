@@ -8,6 +8,7 @@
 # -------
 import random
 import os
+import string
 
 # Web App Modules
 # ---------------
@@ -21,8 +22,8 @@ from pypdb import *
 # Access Tokens
 # -------------
 app = Flask(__name__)
-ACCESS_TOKEN = os.environ['ACCESS_TOKEN']
-VERIFY_TOKEN = os.environ['VERIFY_TOKEN']
+ACCESS_TOKEN = os.environ["ACCESS_TOKEN"]
+VERIFY_TOKEN = os.environ["VERIFY_TOKEN"]
 bot = Bot(ACCESS_TOKEN)
 
 #We will receive messages that Facebook sends our bot at this endpoint 
@@ -84,9 +85,23 @@ def verify_fb_token(token_sent):
 #chooses a random message to send to the user
 def get_message(facebook_message):
 
-    
+
+    # First process the message
+    message_with_punctuation = facebook_message
+    table = str.maketrans(dict.fromkeys(string.punctuation))
+    stripped_punctuation_message = message_with_punctuation.translate(table)
+
+    import nltk
+    words = set(nltk.corpus.words.words())
+
     # return selected item to the user
-    pdb_file = get_pdb_file('4lza', filetype='cif', compression=False)
+    for word in nltk.wordpunct_tokenize(stripped_punctuation_message):
+        if word.lower() in words:
+            continue
+        else:
+            protein_code = word
+
+    pdb_file = get_pdb_file(protein_code, filetype='pdb', compression=False)
 
     return "Here is your protein %s" % pdb_file
 
