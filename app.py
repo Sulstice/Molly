@@ -2,14 +2,24 @@
 #
 # Main App
 #
-# --------
+# -----------------
+
 # Imports
 # -------
 import random
 import os
+
+# Web App Modules
+# ---------------
 from flask import Flask, request
 from pymessenger.bot import Bot
 
+# PDB Modules
+# -----------
+from pypdb import *
+
+# Access Tokens
+# -------------
 app = Flask(__name__)
 ACCESS_TOKEN = os.environ['ACCESS_TOKEN']
 VERIFY_TOKEN = os.environ['VERIFY_TOKEN']
@@ -18,6 +28,12 @@ bot = Bot(ACCESS_TOKEN)
 #We will receive messages that Facebook sends our bot at this endpoint 
 @app.route("/", methods=['GET', 'POST'])
 def receive_message():
+
+    """
+
+    This function will be used to retrieve the message from the user
+
+    """
     if request.method == 'GET':
         """Before allowing people to message your bot, Facebook has implemented a verify token
         that confirms all requests that your bot receives came from Facebook."""
@@ -31,11 +47,11 @@ def receive_message():
             messaging = event['messaging']
             for message in messaging:
                 if message.get('message'):
-                    print (message)
                     #Facebook Messenger ID for user so we know where to send response back to
                     recipient_id = message['sender']['id']
-                    if message['message'].get('text'):
-                        response_sent_text = get_message()
+                    facebook_message = message['message'].get('text')
+                    if facebook_message and "protein" in facebook_message:
+                        response_sent_text = get_message(facebook_message)
                         send_message(recipient_id, response_sent_text)
                     #if user sends us a GIF, photo,video, or any other non-text item
                     if message['message'].get('attachments'):
@@ -45,6 +61,19 @@ def receive_message():
 
 
 def verify_fb_token(token_sent):
+
+    """
+
+
+    Token used for facebook API, information is stored on Heroku Deployed App
+
+    Arguments:
+         token_sent (String): The token used to verify to messenger API
+
+    Returns:
+        requests (Object): Something tailored for just Facebook.
+
+    """
     #take token sent by facebook and verify it matches the verify token you sent
     #if they match, allow the request, else return an error 
     if token_sent == VERIFY_TOKEN:
@@ -53,10 +82,16 @@ def verify_fb_token(token_sent):
 
 
 #chooses a random message to send to the user
-def get_message():
-    sample_responses = ["You are stunning!", "We're proud of you.", "Keep on being you!", "We're greatful to know you :)"]
+def get_message(facebook_message):
+
+    
     # return selected item to the user
-    return random.choice(sample_responses)
+    pdb_file = get_pdb_file('4lza', filetype='cif', compression=False)
+
+    return "Here is your protein %s" % pdb_file
+
+def default_message():
+    return "Awesome!"
 
 #uses PyMessenger to send response to user
 def send_message(recipient_id, response):
